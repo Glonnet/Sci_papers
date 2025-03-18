@@ -1,11 +1,12 @@
 #Paul's Experiments in Science Papers Queries (LLM)
 
-#NOTE: 14:15 18 March 2025 : We need to input the correct dataset and the location of the LLM model.
+#NOTE: 14:15 18 March 2025 : We need to input the correct location of the LLM model.
 
 # Library for file manipulation
 import pandas as pd
 import numpy as np
 import faiss
+import json
 from sentence_transformers import SentenceTransformer
 
 # LLM
@@ -18,9 +19,14 @@ from transformers import LlamaForCausalLM, LlamaTokenizer
 #%reload_ext watermark
 #%watermark -a "Library versions" --iversionss
 
-# WE NEED TO PUT THE CORRECT DATASET HERE AND HAVE THE WORKING LINK/REFERENCE
-# Load the dataset "What is known about adaptations (mutations) of the virus" into a DataFrame
-data_2 = pd.read_pd.read_excel('/home/PaulLambert76/code/Glonnet/Sci_papers/raw_data/papers.xlsx')
+#Dataset processing
+
+# WE NEED TO CHANGE THIS PATH INTO A RELATIVE PATH SO THAT OTHERS CAN USE IT. IF YOU KNOW HOW, PLEASE GO AHEAD.
+df = pd.read_excel('/home/pitcalco/code/Glonnet/Sci_papers/raw_data/papers.xlsx')
+df = df.dropna(subset=['title', 'abstract'])
+
+# Load the dataset
+data_2 = df #comes from /home/pitcalco/code/Glonnet/Sci_papers/raw_data/papers.xlsx
 
 # Create a new 'context' column by combining 'Study', 'Method', and 'Result' (adjust as needed)
 data_2['context'] = (data_2['Study'].fillna('') + " " +
