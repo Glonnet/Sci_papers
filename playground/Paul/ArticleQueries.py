@@ -50,7 +50,8 @@ index.add(embeddings)  # Add the generated embeddings to the index
 faiss.write_index(index, "faiss_index.bin")
 
 # Load the LLM Model
-model_path = "/kaggle/input/llama-3.2/transformers/3b/1" #I NEED THE CORRECT PATH FOR THIS. IS THIS CORRECT?
+model_path = "meta-llama/Llama-3-8B" #HuggingFace
+
 
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
