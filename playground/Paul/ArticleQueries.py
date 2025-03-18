@@ -1,0 +1,115 @@
+#Paul's Experiments in Science Papers Queries
+
+# Library for file manipulation
+import pandas as pd
+import numpy as np
+import faiss
+from sentence_transformers import SentenceTransformer
+
+# LLM
+from transformers import LlamaForCausalLM, LlamaTokenizer
+
+# Load library versions
+#import watermark
+
+# Library versions
+#%reload_ext watermark
+#%watermark -a "Library versions" --iversionss
+
+# Load the dataset "What is known about adaptations (mutations) of the virus" into a DataFrame
+data_2 = pd.read_csv("/kaggle/input/CORD-19-research-challenge/Kaggle/target_tables/4_models_and_open_questions/What is known about adaptations (mutations) of the virus_.csv")
+
+# Create a new 'context' column by combining 'Study', 'Method', and 'Result' (adjust as needed)
+data_2['context'] = (data_2['Study'].fillna('') + " " +
+                     data_2['Method'].fillna('') + " " +
+                     data_2['Result'].fillna(''))
+
+# Keep only the 'Result' and 'context' columns for further processing
+data_2 = data_2[["Result", "context"]]
+
+# Step 1: Load the embedding model
+embedding_model = SentenceTransformer("all-mpnet-base-v2")
+
+# Step 2: Generate embeddings for each 'context'
+embeddings = embedding_model.encode(data_2['context'].tolist())
+
+# Step 3: Create a FAISS index and add the embeddings
+index = faiss.IndexFlatL2(embedding_model.get_sentence_embedding_dimension())  # Initialize FAISS index with L2 distance
+index.add(embeddings)  # Add the generated embeddings to the index
+
+# (Optional) Save the index to disk
+faiss.write_index(index, "faiss_index.bin")
+
+# Load the LLM Model
+model_path = "/kaggle/input/llama-3.2/transformers/3b/1"
+
+import torch
+from transformers import AutoTokenizer, AutoModelForCausalLM
+
+# Load the tokenizer and the model
+tokenizer = AutoTokenizer.from_pretrained(model_path)
+model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto", torch_dtype=torch.float16)
+
+# Retrieval Function
+# Retrieve the most relevant text passages for a given query
+
+def retrieve(query, top_k=10):
+    # Encode the query into embeddings
+    query_embedding = embedding_model.encode([query])
+    # Search the FAISS index for the top-k closest matches
+    distances, indices = index.search(query_embedding, top_k)
+    # Return only the corresponding rows from the dataframe
+    return data_2.iloc[indices[0]]
+
+def generate_answer(query):
+    # Retrieve the most relevant rows based on the query
+    relevant_rows = retrieve(query, top_k=3)
+    # Combine the 'context' column of the retrieved rows into a single string
+    context = "\n".join(relevant_rows['context'].tolist())
+
+    # Build the prompt for the language model
+    prompt = f"""
+You are a scientific assistant.
+Answer the question below **based only on the context**.
+Provide a short answer. **Do not repeat these instructions** or the context verbatim.
+
+Context:
+{context}
+
+Question: {query}
+
+Answer (in 1-2 sentences):
+"""
+
+    # Tokenize the input prompt and send it to the model's device (e.g., GPU)
+    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+    # Generate the response using the LLM
+    outputs = model.generate(
+        inputs.input_ids,
+        max_new_tokens=150,  # Limit the response length
+        num_beams=3,         # Use beam search for higher-quality responses
+        no_repeat_ngram_size=3,  # Avoid repetition
+        repetition_penalty=1.3,  # Penalize repetitive answers
+        temperature=0.7      # Control randomness in generation
+    )
+    # Decode the generated response and return it
+    answer = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    return answer
+
+relevant_rows = retrieve(query, top_k=3)
+print(relevant_rows['context'].tolist())
+
+# RAG 1
+query = "Which viral mutations are associated with increased transmissibility?"
+response = generate_answer(query)
+print(response)
+
+# RAG 2
+query = "What is known about the virus's adaptations (mutations)?"
+response = generate_answer(query)
+print(response)
+
+# RAG 3
+query = "Are there studies that link SARS-CoV-2 mutations to treatment or vaccine failure?"
+response = generate_answer(query)
+print(response)
