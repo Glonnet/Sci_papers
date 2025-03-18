@@ -1,4 +1,6 @@
-#Paul's Experiments in Science Papers Queries
+#Paul's Experiments in Science Papers Queries (LLM)
+
+#NOTE: 14:15 18 March 2025 : We need to input the correct dataset and the location of the LLM model.
 
 # Library for file manipulation
 import pandas as pd
@@ -16,8 +18,9 @@ from transformers import LlamaForCausalLM, LlamaTokenizer
 #%reload_ext watermark
 #%watermark -a "Library versions" --iversionss
 
+# WE NEED TO PUT THE CORRECT DATASET HERE AND HAVE THE WORKING LINK/REFERENCE
 # Load the dataset "What is known about adaptations (mutations) of the virus" into a DataFrame
-data_2 = pd.read_csv("/kaggle/input/CORD-19-research-challenge/Kaggle/target_tables/4_models_and_open_questions/What is known about adaptations (mutations) of the virus_.csv")
+data_2 = pd.read_pd.read_excel('/home/PaulLambert76/code/Glonnet/Sci_papers/raw_data/papers.xlsx')
 
 # Create a new 'context' column by combining 'Study', 'Method', and 'Result' (adjust as needed)
 data_2['context'] = (data_2['Study'].fillna('') + " " +
@@ -41,7 +44,7 @@ index.add(embeddings)  # Add the generated embeddings to the index
 faiss.write_index(index, "faiss_index.bin")
 
 # Load the LLM Model
-model_path = "/kaggle/input/llama-3.2/transformers/3b/1"
+model_path = "/kaggle/input/llama-3.2/transformers/3b/1" #I NEED THE CORRECT PATH FOR THIS. IS THIS CORRECT?
 
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
