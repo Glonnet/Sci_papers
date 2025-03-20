@@ -1,0 +1,2 @@
+openpyxl #to read excel files
+transformers sentence-transformers faiss-cpu
