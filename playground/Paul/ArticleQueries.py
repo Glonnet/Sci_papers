@@ -1,54 +1,31 @@
 #Paul's Experiments in Science Papers Queries (LLM)
 
-#NOTE: 14:15 18 March 2025 : We need to input the correct location of the LLM model.
-
 # Library for file manipulation
 import pandas as pd
 import numpy as np
 import faiss
-import json
+import faulthandler
+faulthandler.enable()
 from sentence_transformers import SentenceTransformer
 
-# LLM
-from transformers import LlamaForCausalLM, LlamaTokenizer
-
-# Load library versions
-#import watermark
-
-# Library versions
-#%reload_ext watermark
-#%watermark -a "Library versions" --iversionss
-
-#Dataset processing
-
-# WE NEED TO CHANGE THIS PATH INTO A RELATIVE PATH SO THAT OTHERS CAN USE IT. IF YOU KNOW HOW, PLEASE GO AHEAD.
 df = pd.read_excel('/home/pitcalco/code/Glonnet/Sci_papers/raw_data/papers.xlsx')
 df = df.dropna(subset=['title', 'abstract'])
 
-# Load the dataset
-data_2 = df #comes from /home/pitcalco/code/Glonnet/Sci_papers/raw_data/papers.xlsx
-
-# Create a new 'context' column by combining 'Study', 'Method', and 'Result' (adjust as needed)
-data_2['context'] = (data_2['Study'].fillna('') + " " +
-                     data_2['Method'].fillna('') + " " +
-                     data_2['Result'].fillna(''))
-
-# Keep only the 'Result' and 'context' columns for further processing
-data_2 = data_2[["Result", "context"]]
-
+print("Data loaded")
 # Step 1: Load the embedding model
 embedding_model = SentenceTransformer("all-mpnet-base-v2")
+print(df.columns)
 
 # Step 2: Generate embeddings for each 'context'
-embeddings = embedding_model.encode(data_2['context'].tolist())
-
+embeddings = embedding_model.encode(df['full-text'].tolist())
+print("Data embedded")
 # Step 3: Create a FAISS index and add the embeddings
 index = faiss.IndexFlatL2(embedding_model.get_sentence_embedding_dimension())  # Initialize FAISS index with L2 distance
 index.add(embeddings)  # Add the generated embeddings to the index
 
 # (Optional) Save the index to disk
 faiss.write_index(index, "faiss_index.bin")
-
+print("Faiss saved")
 # Load the LLM Model
 model_path = "meta-llama/Llama-3-8B" #HuggingFace
 
@@ -59,7 +36,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 # Load the tokenizer and the model
 tokenizer = AutoTokenizer.from_pretrained(model_path)
 model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto", torch_dtype=torch.float16)
-
+print("Models loaded")
 # Retrieval Function
 # Retrieve the most relevant text passages for a given query
 
@@ -69,7 +46,7 @@ def retrieve(query, top_k=10):
     # Search the FAISS index for the top-k closest matches
     distances, indices = index.search(query_embedding, top_k)
     # Return only the corresponding rows from the dataframe
-    return data_2.iloc[indices[0]]
+    return df.iloc[indices[0]]
 
 def generate_answer(query):
     # Retrieve the most relevant rows based on the query
@@ -79,17 +56,17 @@ def generate_answer(query):
 
     # Build the prompt for the language model
     prompt = f"""
-You are a scientific assistant.
-Answer the question below **based only on the context**.
-Provide a short answer. **Do not repeat these instructions** or the context verbatim.
+                You are a scientific assistant.
+                Answer the question below **based only on the context**.
+                Provide a short answer. **Do not repeat these instructions** or the context verbatim.
 
-Context:
-{context}
+                Context:
+                {context}
 
-Question: {query}
+                Question: {query}
 
-Answer (in 1-2 sentences):
-"""
+                Answer (in 1-2 sentences):
+                """
 
     # Tokenize the input prompt and send it to the model's device (e.g., GPU)
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
@@ -105,9 +82,6 @@ Answer (in 1-2 sentences):
     # Decode the generated response and return it
     answer = tokenizer.decode(outputs[0], skip_special_tokens=True)
     return answer
-
-relevant_rows = retrieve(query, top_k=3)
-print(relevant_rows['context'].tolist())
 
 # RAG 1
 query = "Which viral mutations are associated with increased transmissibility?"
