@@ -11,12 +11,12 @@ class TextRequest(BaseModel):
     text: str
 
 # Load your fine-tuned model & tokenizer
-# Option 1 - The model is safed locally on your computer
-MODEL_PATH = "/home/alex/code/Glonnet/Sci_papers/summary/trained_model"  # Path to your saved model
-tokenizer = BartTokenizer.from_pretrained(MODEL_PATH)
-model = BartForConditionalGeneration.from_pretrained(MODEL_PATH)
+# Option 1 - The model is saved locally on your computer
+# MODEL_PATH = "/home/alex/code/Glonnet/Sci_papers/summary/trained_model"  # Path to your saved model
+# tokenizer = BartTokenizer.from_pretrained(MODEL_PATH)
+# model = BartForConditionalGeneration.from_pretrained(MODEL_PATH)
 
-# Option 2 - The model is safed inside a bucket on the cloud
+# Option 2 - The model is saved inside a bucket on the cloud
 MODEL_PATH = "gs://your-bucket-name/trained_model"
 model = BartForConditionalGeneration.from_pretrained(MODEL_PATH)
 tokenizer = BartTokenizer.from_pretrained(MODEL_PATH)
