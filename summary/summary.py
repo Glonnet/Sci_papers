@@ -4,19 +4,23 @@ from transformers import pipeline, BartTokenizer, BartForConditionalGeneration, 
 from datasets import Dataset, DatasetDict
 import wandb
 import evaluate
+#import os
+#os.environ["WANDB_DISABLED"] = "true"
+wandb.init(mode="offline")
 
 '''
 To run this code, you might need to:
+pip install openpyxl
 pip install datasets
 pip install wandb
 pip install evaluate
 pip install rouge_score
+pip install 'accelerate>=0.26.0'
 '''
 
 
-
 # Step 1: Get the data
-data = pd.read_excel('/content/sample_data/papers.xlsx')
+data = pd.read_excel('/home/alex/code/Glonnet/Sci_papers/raw_data/papers.xlsx')
 X = data['full-text']
 y = data['abstract']
 
@@ -94,7 +98,7 @@ df_source = pd.concat([data, token_df], axis=1, join='inner').reset_index(drop=T
 train_data, test_data = train_test_split(df_source, test_size=0.2, random_state=42)
 
 # Step 6: Reshape DataFrames
-wandb.init(mode="offline")
+
 
 train_ds = Dataset.from_pandas(train_data).remove_columns(['__index_level_0__'])
 test_ds = Dataset.from_pandas(test_data).remove_columns(['__index_level_0__'])
@@ -113,6 +117,7 @@ def compute_metrics(eval_pred):
 # Step 8: Define training arguments
 training_args = TrainingArguments(
     output_dir="/home/alex/code/Glonnet/Sci_papers/summary/training.py",  # Replace with your output directory
+    run_name="scientific_paper_summarization",
     per_device_train_batch_size=8,
     num_train_epochs=2,  # Adjust number of epochs as needed
     learning_rate=3e-5,
@@ -121,6 +126,11 @@ training_args = TrainingArguments(
     weight_decay=0.01,
     remove_unused_columns=False
 )
+'''
+Best score obtained so far with current metrics:
+training_loss=2.445428466796875
+'eval_loss': 2.862306594848633
+'''
 
 # Step 9: Create Trainer Object
 trainer = Trainer(
