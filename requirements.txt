@@ -44,3 +44,7 @@ pytest-asyncio
 torch==2.4.0
 torchvision
 torchaudio
+
+openpyxl #to read excel files
+transformers sentence-transformers faiss-cpu
+
