@@ -1,0 +1,9 @@
+
+#torchvision
+#torchaudio
+pandas
+fastapi==0.108.0
+pytz
+uvicorn
+transformers
+openpyxl
