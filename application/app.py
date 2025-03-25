@@ -3,8 +3,8 @@ import requests
 import os
 import pandas as pd
 
-#url = 'http://0.0.0.0:8000'
-url = 'https://api-summary-780137948407.europe-west1.run.app'
+url = 'http://0.0.0.0:8000'
+#url = 'https://api-summary-780137948407.europe-west1.run.app'
 
 st.title("Scientific paper summarizer")
 st.header("Please upload an Excel file: ")
@@ -15,14 +15,14 @@ df = pd.read_excel('raw_data/papers_test.xlsx')
 with st.expander("📂 Click to View and Select Documents"):
     # List of available documents
 
-    documents = [f"title: {title}" for title in df['title']]
+    documents = [f"{title}" for title in df['title']]
 
     # Multi-select allows the user to choose one document
     selected_doc = st.selectbox("Choose a document to summarize:", documents)
     #df.loc[selected_doc.split(':')[1]]
-    doc = str(selected_doc.split(':')[1].strip())
+    doc = str(selected_doc.strip())
     selection = df[df['title'] == doc]
-    st.subheader(df['title'].values[0] )
+    st.subheader(df['title'][df['title'] == doc].values[0])
     st.text("\n\n" + str(df['full-text'][df['title'] == doc].values[0]))
 
 

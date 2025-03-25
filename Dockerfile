@@ -1,5 +1,5 @@
 # Step 1: Use the same Python version as your virtual environment
-FROM python:3.10.6-buster
+FROM python:3.10.6-slim
 
 # Step 2: Set the working directory inside the container
 WORKDIR Sci_papers
