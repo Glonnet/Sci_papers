@@ -46,5 +46,5 @@ torchvision
 torchaudio
 
 openpyxl #to read excel files
-transformers sentence-transformers faiss-cpu
-
+transformers # sentence-transformers faiss-cpu
+python-multipart

@@ -7,3 +7,4 @@ pytz
 uvicorn
 transformers
 openpyxl
+python-multipart
